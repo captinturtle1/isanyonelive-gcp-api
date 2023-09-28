@@ -4,14 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "gcp-build": "node node_modules/puppeteer/install.js"
+    "start": "cross-env NODE_ENV=dev npx functions-framework --target=kick",
+    "gcp-build": "cross-env NODE_ENV=prod node node_modules/puppeteer/install.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@google-cloud/functions-framework": "^3.0.0",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "express": "^4.18.2",
     "puppeteer": "^20.9.0",
     "puppeteer-extra": "^3.3.6",
