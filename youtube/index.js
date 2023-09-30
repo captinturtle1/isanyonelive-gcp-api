@@ -1,6 +1,6 @@
-const pretty = require('pretty');
 const express = require('express');
 const cors = require('cors');
+const cheerio = require('cheerio');
 
 const app = express();
 
@@ -8,7 +8,7 @@ app.use(cors());
 
 // takes a string of numbers with commas, and returns only a number
 function parseViewers(viewerString) {
-    let numArray = Array.from(viewerString);
+    const numArray = Array.from(viewerString);
     let followerNumArray = [];
 
     for (let i = 0; i < numArray.length; i++) {
@@ -17,22 +17,38 @@ function parseViewers(viewerString) {
         }
     }
 
-    let viewersNum = parseInt(followerNumArray.join(''));
-
+    const viewersNum = parseInt(followerNumArray.join(''));
     return viewersNum;
 }
 
 async function getInfo(channelName) {
-    // getting the "html" to parse thru and formatting it a bit
-    let response = await fetch(`https://youtube.com/@${channelName}`);
-    let html = await response.text();
-    let prettied = pretty(html); 
+    // getting the "html" to parse throuh
+    const response = await fetch(`https://youtube.com/@${channelName}`);
+    const textHtml = await response.text();
 
-    // if invalid channel
-    if (prettied.match(/<title>404 Not Found<\/title>/)) return false;
+    // convert to cheerio object
+    let ytData;
+    const $ = cheerio.load(textHtml);
+
+    //check if channel is valid
+    if ($('title').text() === '404 Not Found') return false;
+
+    $('script').each((index, element) => {
+        const html = $(element).html();
+        const varName = 'var ytInitialData = ';
+        
+        // if the script tag contains the variable we are looking for
+        if (html.includes(varName)) {
+            // cleaning text and getting an object
+            const startIndex = html.indexOf('var ytInitialData = ') + 'var ytInitialData = '.length;
+            const endIndex = html.indexOf('};', startIndex) + 1;
+            const onlyObject = html.slice(startIndex, endIndex);
+            ytData = JSON.parse(onlyObject);
+        }
+    })
 
     // defining the channel info object
-    let infoObject = {
+    const infoObject = {
         name: channelName,
         displayName: '',
         profileImageURL: '',
@@ -44,51 +60,37 @@ async function getInfo(channelName) {
         streamThumbnail: '',
     }
 
-    // setting if the channel is verified
-    if (prettied.match(/"style": "BADGE_STYLE_TYPE_VERIFIED"/)) infoObject.verified = true;
-
-    // getting and setting the profile image url
-    if (prettied.match(/<link rel="image_src" href="([^"]*)"[^>]*>/)) {
-        infoObject.profileImageURL = prettied.match(/<link rel="image_src" href="([^"]*)"[^>]*>/)[1];
-    };
-
-    // getting and setting the display name
-    if (prettied.match(/<meta property="og:title" content="([^"]*)"[^>]*>/)) {
-        infoObject.displayName = prettied.match(/<meta property="og:title" content="([^"]*)"[^>]*>/)[1];
-    };
     
-    // stuff to do if the channel is live
-    if (prettied.match(/"text": "LIVE"/)) {
+
+    // setting verfied status
+    if (ytData.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents[2].itemSectionRenderer.contents[0].shelfRenderer) {
+        infoObject.verified = true
+    };
+
+    // setting profile image
+    infoObject.profileImageURL = ytData.header.c4TabbedHeaderRenderer.avatar.thumbnails[2].url;
+
+    // setting display name
+    infoObject.displayName = ytData.header.c4TabbedHeaderRenderer.title;
+    
+    // if channel is live
+    if (ytData.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].channelFeaturedContentRenderer) {
         // setting live to true
         infoObject.live = true
 
-        // getting and setting viewers
-        let matchedViewers = prettied.match(/"viewCountText"\s*:\s*{\s*"runs"\s*:\s*\[\s*{\s*"text"\s*:\s*"([^"]+)"/);
-        infoObject.viewers = parseViewers(matchedViewers[1]);
+        // setting viewers
+        const viewCount = ytData.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].channelFeaturedContentRenderer.items[0].videoRenderer.viewCountText.runs[0].text;
+        infoObject.viewers = parseViewers(viewCount);
 
-        // getting and setting stream title
+        // setting stream title
+        infoObject.streamTitle = ytData.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].channelFeaturedContentRenderer.items[0].videoRenderer.title.runs[0].text;
 
-        // gets all titles
-        let matchedTitles = prettied.match(/"title"\s*:\s*{\s*"runs"\s*:\s*\[\s*{\s*"text"\s*:\s*"([^"]+)"/g);
-        let textArray = [];
-        for (let i = 0; i < matchedTitles.length; i++) {
-            let textValue = matchedTitles[i].match(/"text":\s+"([^"]+)"/);
-            textArray.push(textValue[1]);
-        }
-        if (textArray[0].length == 1 && !isNaN(textArray[0])) {
-            // if channel has multiple streams
-            infoObject.streamTitle = textArray[1];
-        } else {
-            // if channel has one stream
-            infoObject.streamTitle = textArray[0];
-        }
+        // setting stream url
+        const videoId = ytData.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].channelFeaturedContentRenderer.items[0].videoRenderer.videoId;
+        infoObject.streamURL = `https://www.youtube.com/watch?v=${videoId}`;
 
-        // getting and setting stream url
-        let matchedId = prettied.match(/"videoId"\s*:\s*"([^"]+)"/)
-        infoObject.streamURL = `https://www.youtube.com/watch?v=${matchedId[1]}`;
-
-        // setting thumbnail url using video id
-        infoObject.streamThumbnail = `https://img.youtube.com/vi/${matchedId[1]}/maxresdefault.jpg`;
+        // setting stream thumbnail
+        infoObject.streamThumbnail = ytData.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].channelFeaturedContentRenderer.items[0].videoRenderer.thumbnail.thumbnails[3].url;
     };
 
     return infoObject;
@@ -121,6 +123,7 @@ app.post('/', (req, res) => {
         youtubeChannelInfo(req.body).then(body => {
             res.status(200).json({ body });
         }).catch((err) => {
+            console.log(err);
             res.status(500).json({error: "Internal Server Error"})
         });
     } else {
