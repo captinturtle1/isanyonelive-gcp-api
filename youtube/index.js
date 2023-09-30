@@ -3,7 +3,6 @@ const cors = require('cors');
 const cheerio = require('cheerio');
 
 const app = express();
-
 app.use(cors());
 
 // takes a string of numbers with commas, and returns only a number

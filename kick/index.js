@@ -32,7 +32,7 @@ function kickChannelInfo(channels) {
                 let infoObject = {
                     name: extractedText.slug,
                     displayName: extractedText.user.username,
-                    profileImageURL: extractedText.user.profile_pic,
+                    profileImageURL: extractedText.user.profile_pic != null ? extractedText.user.profile_pic : '',
                     streamURL: `https://kick.com/${channelName}`,
                     verified: extractedText.verified != null,
                     followers: extractedText.followersCount,

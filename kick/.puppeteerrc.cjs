@@ -1,4 +1,4 @@
-const {join} = require('path');
+const { join } = require('path');
 
 let env = (process.env.NODE_ENV);
 
