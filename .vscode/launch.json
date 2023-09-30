@@ -7,8 +7,8 @@
             "preLaunchTask": "docker-run: debug",
             "platform": "node",
             "node": {
-                "package": "${workspaceFolder}/twitch/package.json",
-                "localRoot": "${workspaceFolder}/twitch"
+                "package": "${workspaceFolder}/kick/package.json",
+                "localRoot": "${workspaceFolder}/kick"
             }
         }
     ]

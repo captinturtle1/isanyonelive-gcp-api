@@ -6,12 +6,12 @@
 			"label": "docker-build",
 			"platform": "node",
 			"dockerBuild": {
-				"dockerfile": "${workspaceFolder}/twitch/Dockerfile",
-				"context": "${workspaceFolder}/twitch",
+				"dockerfile": "${workspaceFolder}/kick/Dockerfile",
+				"context": "${workspaceFolder}/kick",
 				"pull": true
 			},
 			"node": {
-				"package": "${workspaceFolder}/twitch/package.json"
+				"package": "${workspaceFolder}/kick/package.json"
 			}
 		},
 		{
@@ -22,7 +22,7 @@
 			],
 			"platform": "node",
 			"node": {
-				"package": "${workspaceFolder}/twitch/package.json"
+				"package": "${workspaceFolder}/kick/package.json"
 			}
 		},
 		{
@@ -38,7 +38,7 @@
 				}
 			},
 			"node": {
-				"package": "${workspaceFolder}/twitch/package.json",
+				"package": "${workspaceFolder}/kick/package.json",
 				"enableDebugging": true
 			}
 		}

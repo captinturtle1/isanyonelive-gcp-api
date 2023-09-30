@@ -13,8 +13,8 @@ function kickChannelInfo(channels) {
             puppeteer.use(stealthPlugin());
             
             const browser = await puppeteer.launch({
-                headless: "new",
-                executablePath: '/usr/bin/chromium-browser'
+                executablePath: '/usr/bin/chromium-browser',
+                headless: "new"
             });
 
             const page = await browser.newPage() 
