@@ -1,4 +1,5 @@
 FROM node:lts-alpine
+RUN apt-get update && apt-get install -y google-chrome-stable
 ENV NODE_ENV=production
 WORKDIR /usr/src/app
 COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
