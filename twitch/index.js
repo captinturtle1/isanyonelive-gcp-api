@@ -162,7 +162,8 @@ app.post('/', (req, res) => {
     if (isValid) {
         twitchChannelInfo(req.body).then(body => {
             res.status(200).json({ body });
-        }).catch(() => {
+        }).catch((err) => {
+            console.error(err);
             res.status(500).json({error: "Internal Server Error"})
         });
     } else {
