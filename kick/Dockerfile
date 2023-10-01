@@ -9,5 +9,4 @@ RUN apk --no-cache add chromium \
 EXPOSE 8080
 RUN chown -R node /usr/src/app
 USER node
-RUN npm install puppeteer
 CMD ["npm", "start"]

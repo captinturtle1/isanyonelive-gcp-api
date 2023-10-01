@@ -14,8 +14,7 @@ function kickChannelInfo(channels) {
             
             const browser = await puppeteer.launch({
                 executablePath: '/usr/bin/chromium-browser',
-                headless: "new",
-                args: [ '--disable-gpu', '--no-sandbox' ]
+                headless: "new"
             });
 
             const page = await browser.newPage() 
