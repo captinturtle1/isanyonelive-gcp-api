@@ -155,7 +155,7 @@ app.post('/', (req, res) => {
     let isValid = true;
     for (let i = 0; i < req.body.length; i++) {
         if (isValid) {
-            isValid = (req.body[i]).match(/^[a-zA-Z0-9_]+$/i);
+            isValid = (req.body[i]).match(/^[a-zA-Z0-9_]{4,25}$/);
         }
     }
 
