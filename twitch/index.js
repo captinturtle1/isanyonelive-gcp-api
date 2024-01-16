@@ -163,17 +163,17 @@ app.post('/', async (req, res) => {
         try {
             let channelNames = req.body;
             let numOfCalls = Math.ceil(channelNames.length / 100)
-            let finalResponse = [];
 
+            let body = [];
             for (let i = 0; i < numOfCalls; i++) {
                 let arraySection = channelNames.splice(0, 100);
                 let response = await twitchChannelInfo(arraySection);
                 for (let j = 0; j < response.length; j++) {
-                    finalResponse.push(response[j])
+                    body.push(response[j])
                 }
             }
             
-            res.status(200).json({ response: finalResponse });
+            res.status(200).json({ body });
         } catch(err) {
             console.error(err);
             res.status(500).json({error: "Internal Server Error"})
