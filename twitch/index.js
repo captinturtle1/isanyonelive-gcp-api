@@ -151,7 +151,7 @@ function twitchChannelInfo(channels) {
 }
 
 
-app.post('/', (req, res) => {
+app.post('/', async (req, res) => {
     let isValid = true;
     for (let i = 0; i < req.body.length; i++) {
         if (isValid) {
@@ -160,12 +160,24 @@ app.post('/', (req, res) => {
     }
 
     if (isValid) {
-        twitchChannelInfo(req.body).then(body => {
-            res.status(200).json({ body });
-        }).catch((err) => {
+        try {
+            let channelNames = req.body;
+            let numOfCalls = Math.ceil(channelNames.length / 100)
+            let finalResponse = [];
+
+            for (let i = 0; i < numOfCalls; i++) {
+                let arraySection = channelNames.splice(0, 100);
+                let response = await twitchChannelInfo(arraySection);
+                for (let j = 0; j < response.length; j++) {
+                    finalResponse.push(response[j])
+                }
+            }
+            
+            res.status(200).json({ response: finalResponse });
+        } catch(err) {
             console.error(err);
             res.status(500).json({error: "Internal Server Error"})
-        });
+        }
     } else {
         res.status(400).json({error: "Bad Request"});
     }
