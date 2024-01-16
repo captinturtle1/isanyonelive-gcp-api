@@ -118,7 +118,9 @@ app.post('/', (req, res) => {
         }
     }
 
-    if (isValid) {
+    if (req.body.length > 50) {
+        res.status(400).json({error: "50 channels max."});
+    } else if (isValid) {
         youtubeChannelInfo(req.body).then(body => {
             res.status(200).json({ body });
         }).catch((err) => {
