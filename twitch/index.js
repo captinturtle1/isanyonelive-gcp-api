@@ -7,6 +7,18 @@ const app = express();
 
 app.use(cors());
 
+function convertToSeconds(timeString) {
+    const hoursRegex = /(\d+)h/;
+    const minutesRegex = /(\d+)m/;
+    const secondsRegex = /(\d+)s/;
+
+    const hours = (hoursRegex.exec(timeString) || [])[1] || 0;
+    const minutes = (minutesRegex.exec(timeString) || [])[1] || 0;
+    const seconds = (secondsRegex.exec(timeString) || [])[1] || 0;
+
+    return (hours * 3600) + (minutes * 60) + parseInt(seconds, 10);
+}
+
 function getAccessToken() {
     return new Promise(async (resolve, reject) => {
         try {
@@ -72,10 +84,29 @@ function getTwitchUser(loginUrlParams, accessToken) {
     })
 }
 
+function getLatestVideo(user_id, accessToken) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let options = {
+                method: "GET",
+                headers: {
+                    'Authorization': 'Bearer ' + accessToken,
+                    'Client-Id': process.env.TWITCH_CLIENT_ID
+                }
+            };
+            
+            let response = await fetch(`https://api.twitch.tv/helix/videos?user_id=${user_id}&first=1`, options);
+            response = await response.json();
+            resolve(response.data[0]);
+        } catch(err) {
+            reject(err);
+        }
+    });
+}
+
 function twitchChannelInfo(channels) {
     return new Promise(async (resolve, reject) => {
             try {
-                
                 let accessToken = await getAccessToken();
                 // constructing api url for streams endpoint
                 let urlParems = '';
@@ -112,6 +143,15 @@ function twitchChannelInfo(channels) {
                 
                 let newDataArray = [];
                 for (let i = 0; i < usersResponse.length; i++) {
+                    /*
+                    let latestStream = await getLatestVideo(usersResponse[i].id, accessToken);
+
+                    let whenLastLive;
+                    if (latestStream) {
+                        whenLastLive = (new Date(latestStream.published_at).getTime()/1000) + convertToSeconds(latestStream.duration);
+                    }
+                    */
+                    
                     let infoObject = {
                         name: usersResponse[i].login,
                         displayName: usersResponse[i].display_name,
@@ -125,6 +165,7 @@ function twitchChannelInfo(channels) {
                         tags: [],
                         streamThumbnail: '',
                         streamStartTime: 0,
+                        //lastStreamTime: whenLastLive,
                     }
 
                     // loop thru stream endpoint responses to find matching name for current users endpoint
@@ -149,7 +190,6 @@ function twitchChannelInfo(channels) {
             }
     });
 }
-
 
 app.post('/', async (req, res) => {
     let isValid = true;
