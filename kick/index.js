@@ -1,3 +1,5 @@
+const puppeteer = require('puppeteer-extra');
+const stealthPlugin = require('puppeteer-extra-plugin-stealth');
 const express = require('express');
 const cors = require('cors');
 
@@ -8,13 +10,27 @@ app.use(cors());
 function kickChannelInfo(channels) {
     return new Promise(async (resolve, reject) => {
         try {
+            puppeteer.use(stealthPlugin());
+            
+            const browser = await puppeteer.launch({
+                executablePath: '/usr/bin/chromium-browser',
+                headless: "new"
+            });
+
+            const page = await browser.newPage() 
+            
             async function getStats(channelName) {
-                let response = await fetch(`https://kick.com/api/v1/channels/${channelName}`);
-                response = await response.json()
-                console.log(response)
+                await page.goto(`https://kick.com/api/v1/channels/${channelName}`);
 
                 // checks if channel exists
-                let extractedText = response;
+                let extractedText = await page.$eval('*', (el) => el.innerText);
+
+                if (extractedText.length == 13) return false;
+                try {
+                    extractedText = JSON.parse(extractedText)
+                } catch(err) {
+                    return false;
+                }
                 
                 let infoObject = {
                     name: extractedText.slug,
@@ -41,6 +57,10 @@ function kickChannelInfo(channels) {
                 if (newInfoObject) newInfoArray.push(newInfoObject);   
             }
 
+            const pages = await browser.pages();
+            await Promise.all(pages.map(async (page) => page.close()));
+            
+            await browser.close()
             resolve(newInfoArray);
         } catch(err) {
             console.log(err);
