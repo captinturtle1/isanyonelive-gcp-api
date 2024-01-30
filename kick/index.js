@@ -13,6 +13,8 @@ function kickChannelInfo(channels) {
             puppeteer.use(stealthPlugin());
             
             const browser = await puppeteer.launch({
+                // this might need to change depending on your chromium installation
+                // comment out the "executablePath" line to run on local
                 executablePath: '/usr/bin/chromium-browser',
                 headless: "new"
             });
