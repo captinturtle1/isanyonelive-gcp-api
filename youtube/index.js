@@ -67,10 +67,10 @@ async function getInfo(channelName) {
     };
 
     // setting profile image
-    infoObject.profileImageURL = ytData.header.c4TabbedHeaderRenderer.avatar.thumbnails[2].url;
+    infoObject.profileImageURL = ytData.metadata.channelMetadataRenderer.avatar.thumbnails[0].url
 
     // setting display name
-    infoObject.displayName = ytData.header.c4TabbedHeaderRenderer.title;
+    infoObject.displayName = ytData.metadata.channelMetadataRenderer.title;
     
     // if channel is live
     if (ytData.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].channelFeaturedContentRenderer) {
